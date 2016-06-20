@@ -31,7 +31,7 @@ var minimapscale = 3;
 var minimapfogdistance = 0;
 var fogdistance = document.getElementById("minimapfog").style;
 
-var nAttributes = 15;
+var nAttributes = 7;
 var generationSize = nAttributes * 2;
 var cw_carArray = new Array();
 var cw_carGeneration = new Array();
@@ -88,7 +88,7 @@ var cw_ghostReplayInterval = null;
 var distanceMeter = document.getElementById("distancemeter");
 
 // Mutation size
-var alpha = 0.5;
+var alpha = 0.05;
 
 var leaderPosition = new Object();
 leaderPosition.x = 0;
@@ -384,7 +384,7 @@ function cw_nextGeneration() {
   //   newGeneration.push(cw_carScores[k].car_def);
   // }
 
-  var parent1 = cw_getParents();
+  var parent1 = 0;
   var offsets = [ -alpha, alpha ];
 
   for(k = 0; k < nAttributes; k++) {
@@ -838,10 +838,6 @@ function simulationStep() {
   world.Step(1/box2dfps, 20, 20);
   ghost_move_frame(ghost);
   for(var k = 0; k < generationSize; k++) {
-      if (!cw_carArray[k]) {
-          debugger;
-      }
-
     if(!cw_carArray[k].alive) {
       continue;
     }
