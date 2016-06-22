@@ -31,7 +31,7 @@ var minimapscale = 3;
 var minimapfogdistance = 0;
 var fogdistance = document.getElementById("minimapfog").style;
 
-var nAttributes = 7;
+var nAttributes = 15;
 var generationSize = nAttributes * 2 + 1;
 var cw_carArray = new Array();
 var cw_carGeneration = new Array();
@@ -49,6 +49,7 @@ var gen_counter = 0;
 
 var gravity = new b2Vec2(0.0, -9.81);
 var doSleep = true;
+var alpha = 0.01;
 
 var world;
 
@@ -89,7 +90,6 @@ var distanceMeter = document.getElementById("distancemeter");
 
 // Mutation size
 var alpha = 0.05;
-
 var leaderPosition = new Object();
 leaderPosition.x = 0;
 leaderPosition.y = 0;
@@ -149,12 +149,12 @@ cw_Car.prototype.__constructor = function(car_def) {
   }
 
   this.chassis = cw_createChassis(car_def.vertex_list, car_def.chassis_density);
-
+  
   this.wheels = [];
   for (var i = 0; i < car_def.wheelCount; i++){
     this.wheels[i] = cw_createWheel(car_def.wheel_radius[i], car_def.wheel_density[i]);
   }
-
+  
   var carmass = this.chassis.GetMass();
   for (var i = 0; i < car_def.wheelCount; i++){
     carmass += this.wheels[i].GetMass();
@@ -163,7 +163,7 @@ cw_Car.prototype.__constructor = function(car_def) {
   for (var i = 0; i < car_def.wheelCount; i++){
     torque[i] = carmass * -gravity.y / car_def.wheel_radius[i];
   }
-
+  
   var joint_def = new b2RevoluteJointDef();
 
   for (var i = 0; i < car_def.wheelCount; i++){
@@ -177,7 +177,7 @@ cw_Car.prototype.__constructor = function(car_def) {
     joint_def.bodyB = this.wheels[i];
     var joint = world.CreateJoint(joint_def);
   }
-
+  
   this.replay = ghost_create_replay();
   ghost_add_replay_frame(this.replay, this);
 }
@@ -188,7 +188,7 @@ cw_Car.prototype.getPosition = function() {
 
 cw_Car.prototype.draw = function() {
   drawObject(this.chassis);
-
+  
   for (var i = 0; i < this.wheels.length; i++){
     drawObject(this.wheels[i]);
   }
@@ -201,12 +201,12 @@ cw_Car.prototype.kill = function() {
   ghost_compare_to_replay(this.replay, ghost, score);
   cw_carScores.push({ car_def:this.car_def, v:score, s: avgspeed, x:position, y:this.maxPositiony, y2:this.minPositiony });
   world.DestroyBody(this.chassis);
-
+  
   for (var i = 0; i < this.wheels.length; i++){
     world.DestroyBody(this.wheels[i]);
   }
   this.alive = false;
-
+  
   // refocus camera to leader on death
   if (camera_target == this.car_def.index){
     cw_setCameraTarget(-1);
@@ -304,9 +304,9 @@ function cw_createWheel(radius, density) {
 function cw_createRandomCar() {
   var v = [];
   var car_def = new Object();
-
-  car_def.wheelCount = 2;
-
+  
+  car_def.wheelCount = 2; 
+  
   car_def.wheel_radius = [];
   car_def.wheel_density = [];
   car_def.wheel_vertex = [];
@@ -314,7 +314,7 @@ function cw_createRandomCar() {
     car_def.wheel_radius[i] = Math.random()*wheelMaxRadius+wheelMinRadius;
     car_def.wheel_density[i] = Math.random()*wheelMaxDensity+wheelMinDensity;
   }
-
+  
   car_def.chassis_density = Math.random()*chassisMaxDensity+chassisMinDensity
 
   car_def.vertex_list = new Array();
@@ -392,7 +392,6 @@ function cw_nextGeneration() {
 
   var parentCar = cw_topScores[0].car_def
   var offsets = [ -alpha, alpha ];
-
   for(k = 0; k < nAttributes; k++) {
     for (i = 0; i < 2; i ++) {
         newborn = cw_makeChild(parentCar, k, offsets[i]);
@@ -445,136 +444,89 @@ function cw_vertex(old_vertex, offset) {
     }
 }
 
-function cw_makeChild(old, k, offset) {
+function cw_makeChild(old, targetGeneIndex, offset) {
   var newCarDef = new Object();
-  var j = 0;
+  var geneIndex = 0;
 
   newCarDef.wheelCount = old.wheelCount;
 
   newCarDef.wheel_radius = [];
   for (var i = 0; i < newCarDef.wheelCount; i++){
-      if (j == k) {
-          newCarDef.wheel_radius[i] = cw_adaptWithinLimits(old.wheel_radius[i], offset, wheelMinRadius, wheelMaxRadius);
+      if (geneIndex == targetGeneIndex) {
+          newCarDef.wheel_radius[i] = cw_mutate1(old.wheel_radius[i], offset, wheelMinRadius, wheelMaxRadius);
       } else {
           newCarDef.wheel_radius[i] = old.wheel_radius[i];
       }
 
-      j++;
+      geneIndex++;
   }
 
   newCarDef.wheel_vertex = [];
   for (var i = 0; i < newCarDef.wheelCount; i++){
-      if (j == k) {
+      if (geneIndex == targetGeneIndex) {
           newCarDef.wheel_vertex[i] = cw_vertex(old.wheel_vertex[i], offset);
       } else {
           newCarDef.wheel_vertex[i] = old.wheel_vertex[i];
       }
 
-      j++;
+      geneIndex++;
   }
 
   newCarDef.wheel_density = [];
   for (var i = 0; i < newCarDef.wheelCount; i++){
-      if (j == k) {
-          newCarDef.wheel_density[i] = cw_adaptWithinLimits(old.wheel_density[i], offset, wheelMinDensity, wheelMaxDensity);
+      if (geneIndex == targetGeneIndex) {
+          newCarDef.wheel_density[i] = cw_mutate1(old.wheel_density[i], offset, wheelMinDensity, wheelMaxDensity);
       } else {
           newCarDef.wheel_density[i] = old.wheel_density[i];
       }
 
-      j++;
+      geneIndex++;
+  }
+
+  // Chassis density
+  if (geneIndex == targetGeneIndex) {
+      newCarDef.chassis_density = cw_mutate1(old.chassis_density, offset, chassisMinDensity, chassisMaxDensity);
+  } else {
+      newCarDef.chassis_density = old.chassis_density;
   }
 
   newCarDef.vertex_list = new Array();
+  limits = [[ 1,  0],
+            [ 1,  1],
+            [ 0,  1],
+            [-1,  1],
+            [-1,  0],
+            [-1, -1],
+            [ 0, -1],
+            [ 1, -1]]
   for (var i = 0; i < 8; i++) {
-      // if (j == k) {
-      //     newCarDef.vertex_list[i] = cw_adaptWithinLimits(old.vertex_list[i], offset, chassisMinAxis, chassisMaxAxis);
-      // } else {
-          newCarDef.vertex_list[i] = old.vertex_list[i];
-      // }
-      j++;
-  }
+      var newCoords = [old.vertex_list[i].x, old.vertex_list[i].y];
 
-  if (j == k) {
-      newCarDef.chassis_density = cw_adaptWithinLimits(old.chassis_density, offset, chassisMinDensity, chassisMaxDensity);
-  } else {
-      newCarDef.chassis_density = old.chassis_density;
+      for (var j = 0; j < 2; j++) {
+          if (geneIndex == targetGeneIndex) {
+              newCoords[j] = cw_mutate1(newCoords[j],
+                      offset,
+                      chassisMinAxis,
+                      limits[i][j] * chassisMaxAxis);
+          }
+          geneIndex++;
+      }
+
+      newCarDef.vertex_list[i] = new b2Vec2(newCoords[0], newCoords[1]);
   }
 
   return newCarDef;
 }
 
-function cw_adaptWithinLimits(value, offset, min, max) {
+function cw_mutate1(old, offset, min, max) {
     var range = max - min;
-    var newValue = value + offset * range;
+    var newValue = old + offset * range;
 
     if (newValue < min || newValue > max) {
-        return value;
+        return old;
     } else {
         return newValue;
     }
-}
-
-
-function cw_mutate1(old, min, range) {
-    var span = range * mutation_range;
-    var base = old - 0.5 * span;
-    if (base < min)
-        base = min;
-    if (base > min + (range - span))
-        base = min + (range - span);
-    return base + span * Math.random();
-}
-
-function cw_mutatev(car_def, n, xfact, yfact) {
-    if (Math.random() >= gen_mutation)
-        return;
-
-    var v = car_def.vertex_list[n];
-    var x = 0;
-    var y = 0;
-    if (xfact != 0)
-        x = xfact * cw_mutate1(xfact * v.x, chassisMinAxis, chassisMaxAxis);
-    if (yfact != 0)
-        y = yfact * cw_mutate1(yfact * v.y, chassisMinAxis, chassisMaxAxis);
-    car_def.vertex_list.splice(n, 1, new b2Vec2(x, y));
-}
-
-
-function cw_mutate(car_def) {
-  for (var i = 0; i < car_def.wheelCount; i++){
-    if(Math.random() < gen_mutation){
-      car_def.wheel_radius[i] = cw_mutate1(car_def.wheel_radius[i], wheelMinRadius, wheelMaxRadius);
-    }
-  }
-
-  var wheel_m_rate = mutation_range < gen_mutation ? mutation_range : gen_mutation;
-
-  for (var i = 0; i < car_def.wheelCount; i++){
-    if(Math.random() < wheel_m_rate){
-      car_def.wheel_vertex[i] = Math.floor(Math.random()*8)%8;
-    }
-  }
-
-  for (var i = 0; i < car_def.wheelCount; i++){
-    if(Math.random() < gen_mutation){
-      car_def.wheel_density[i] = cw_mutate1(car_def.wheel_density[i], wheelMinDensity, wheelMaxDensity);
-    }
-  }
-
-  if(Math.random() < gen_mutation){
-    car_def.chassis_density = cw_mutate1(car_def.chassis_density, chassisMinDensity, chassisMaxDensity);
-  }
-
-  cw_mutatev(car_def, 0, 1, 0);
-  cw_mutatev(car_def, 1, 1, 1);
-  cw_mutatev(car_def, 2, 0, 1);
-  cw_mutatev(car_def, 3, -1, 1);
-  cw_mutatev(car_def, 4, -1, 0);
-  cw_mutatev(car_def, 5, -1, -1);
-  cw_mutatev(car_def, 6, 0, -1);
-  cw_mutatev(car_def, 7, 1, -1);
-
-  return car_def;
 }
 
 function cw_chooseParent(curparent, attributeIndex) {
@@ -697,7 +649,7 @@ function cw_drawCars() {
         cw_drawCircle(b, s.m_p, s.m_radius, b.m_sweep.a, rgbcolor);
       }
     }
-
+    
     var densitycolor = Math.round(100 - (70 * ((myCar.car_def.chassis_density - chassisMinDensity) / chassisMaxDensity))).toString() + "%";
     if(myCar.is_elite) {
       ctx.strokeStyle = "#44c";
@@ -1081,12 +1033,12 @@ function relMouseCoords(event){
 HTMLDivElement.prototype.relMouseCoords = relMouseCoords;
 minimapholder.onclick = function(event){
   var coords = minimapholder.relMouseCoords(event);
-  var closest = {
+  var closest = { 
     index: 0,
     dist: Math.abs(((cw_carArray[0].getPosition().x + 6) * minimapscale) - coords.x),
     x: cw_carArray[0].getPosition().x
   }
-
+  
   var maxX = 0;
   for (var i = 0; i < cw_carArray.length; i++){
     if (!cw_carArray[i].alive){
@@ -1101,7 +1053,7 @@ minimapholder.onclick = function(event){
     }
     maxX = Math.max(pos.x, maxX);
   }
-
+  
   if (closest.x == maxX){ // focus on leader again
     cw_setCameraTarget(-1);
   } else {
