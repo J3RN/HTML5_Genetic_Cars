@@ -82,7 +82,6 @@ function cw_clearGraphics() {
 function cw_listTopScores() {
   var ts = document.getElementById("topscores");
   ts.innerHTML = "Top Scores:<br />";
-  cw_topScores.sort(function(a,b) {if(a.v > b.v) {return -1} else {return 1}});
   for(var k = 0; k < Math.min(10,cw_topScores.length); k++) {
     document.getElementById("topscores").innerHTML += "#"+(k+1)+": "+Math.round(cw_topScores[k].v*100)/100+" d:"+Math.round(cw_topScores[k].x*100)/100+" h:"+Math.round(cw_topScores[k].y2*100)/100+"/"+Math.round(cw_topScores[k].y*100)/100+"m (gen "+cw_topScores[k].i+")<br />";
   }

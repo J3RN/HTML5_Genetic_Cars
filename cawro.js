@@ -32,7 +32,7 @@ var minimapfogdistance = 0;
 var fogdistance = document.getElementById("minimapfog").style;
 
 var nAttributes = 7;
-var generationSize = nAttributes * 2;
+var generationSize = nAttributes * 2 + 1;
 var cw_carArray = new Array();
 var cw_carGeneration = new Array();
 var cw_carScores = new Array();
@@ -375,26 +375,37 @@ function cw_nextGeneration() {
   var newGeneration = new Array();
   var newborn;
   cw_getChampions();
-  cw_topScores.push({i:gen_counter,v:cw_carScores[0].v,x:cw_carScores[0].x,y:cw_carScores[0].y,y2:cw_carScores[0].y2});
+
+  // Increase alpha if no improvement
+  if (cw_topScores[0] !== undefined && cw_carScores[0].v <= cw_topScores[0].v) {
+      alpha += 0.05;
+  } else {
+      alpha = 0.05;
+  }
+  console.log(alpha);
+
+  // Add car and sort
+  cw_topScores.push({i:gen_counter,v:cw_carScores[0].v,x:cw_carScores[0].x,y:cw_carScores[0].y,y2:cw_carScores[0].y2,car_def:cw_carScores[0].car_def});
+  cw_topScores.sort(function(a,b) {if(a.v > b.v) {return -1} else {return 1}});
+
   plot_graphs();
 
-  // for(var k = 0; k < gen_champions; k++) {
-  //   cw_carScores[k].car_def.is_elite = true;
-  //   cw_carScores[k].car_def.index = k;
-  //   newGeneration.push(cw_carScores[k].car_def);
-  // }
-
-  var parent1 = 0;
+  var parentCar = cw_topScores[0].car_def
   var offsets = [ -alpha, alpha ];
 
   for(k = 0; k < nAttributes; k++) {
     for (i = 0; i < 2; i ++) {
-        newborn = cw_makeChild(cw_carScores[parent1].car_def, k, offsets[i]);
+        newborn = cw_makeChild(parentCar, k, offsets[i]);
         newborn.is_elite = false;
         newborn.index = k * 2 + i;
         newGeneration.push(newborn);
     }
   }
+
+  parentCar.is_elite = true;
+  parentCar.index = nAttributes * 2;
+  newGeneration.push(parentCar)
+
   cw_carScores = new Array();
   cw_carGeneration = newGeneration;
   gen_counter++;
