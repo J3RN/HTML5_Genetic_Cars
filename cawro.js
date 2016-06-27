@@ -49,7 +49,6 @@ var gen_counter = 0;
 
 var gravity = new b2Vec2(0.0, -9.81);
 var doSleep = true;
-var alpha = 0.01;
 
 var world;
 
@@ -90,6 +89,10 @@ var distanceMeter = document.getElementById("distancemeter");
 
 // Mutation size
 var alpha = 0.05;
+
+// Lineage
+var winners = [];
+
 var leaderPosition = new Object();
 leaderPosition.x = 0;
 leaderPosition.y = 0;
@@ -301,6 +304,16 @@ function cw_createWheel(radius, density) {
   return body;
 }
 
+function cw_randomVertexLength() {
+    return Math.random() * chassisMaxAxis + chassisMinAxis;
+}
+
+function cw_createVertex(i, length) {
+    var x = Math.cos(i * Math.PI / 4) * length;
+    var y = Math.sin(i * Math.PI / 4) * length;
+    return new b2Vec2(x, y);
+}
+
 function cw_createRandomCar() {
   var v = [];
   var car_def = new Object();
@@ -318,14 +331,9 @@ function cw_createRandomCar() {
   car_def.chassis_density = Math.random()*chassisMaxDensity+chassisMinDensity
 
   car_def.vertex_list = new Array();
-  car_def.vertex_list.push(new b2Vec2(Math.random()*chassisMaxAxis + chassisMinAxis,0));
-  car_def.vertex_list.push(new b2Vec2(Math.random()*chassisMaxAxis + chassisMinAxis,Math.random()*chassisMaxAxis + chassisMinAxis));
-  car_def.vertex_list.push(new b2Vec2(0,Math.random()*chassisMaxAxis + chassisMinAxis));
-  car_def.vertex_list.push(new b2Vec2(-Math.random()*chassisMaxAxis - chassisMinAxis,Math.random()*chassisMaxAxis + chassisMinAxis));
-  car_def.vertex_list.push(new b2Vec2(-Math.random()*chassisMaxAxis - chassisMinAxis,0));
-  car_def.vertex_list.push(new b2Vec2(-Math.random()*chassisMaxAxis - chassisMinAxis,-Math.random()*chassisMaxAxis - chassisMinAxis));
-  car_def.vertex_list.push(new b2Vec2(0,-Math.random()*chassisMaxAxis - chassisMinAxis));
-  car_def.vertex_list.push(new b2Vec2(Math.random()*chassisMaxAxis + chassisMinAxis,-Math.random()*chassisMaxAxis - chassisMinAxis));
+  for (var i = 0; i < 8; i++) {
+      car_def.vertex_list.push(cw_createVertex(i, cw_randomVertexLength()));
+  }
 
   var left = [];
   for (var i = 0; i < 8; i++){
@@ -361,6 +369,7 @@ function cw_generationZero() {
   cw_materializeGeneration();
   document.getElementById("generation").innerHTML = "generation 0";
   document.getElementById("population").innerHTML = "cars alive: "+generationSize;
+  document.getElementById("alpha").innerHTML = "alpha: " + alpha.toFixed(2);
   ghost = ghost_create_ghost();
 }
 
@@ -377,17 +386,16 @@ function cw_nextGeneration() {
   cw_getChampions();
 
   // Increase alpha if no improvement
-  if (cw_topScores[0] !== undefined && cw_carScores[0].v <= cw_topScores[0].v) {
+  if (cw_topScores[0] !== undefined && cw_carScores[0].v <= cw_topScores[0].v && alpha < 1.0) {
       alpha += 0.05;
   } else {
       alpha = 0.05;
+      winners.push(cw_carScores[0].car_def);
   }
-  console.log(alpha);
 
   // Add car and sort
   cw_topScores.push({i:gen_counter,v:cw_carScores[0].v,x:cw_carScores[0].x,y:cw_carScores[0].y,y2:cw_carScores[0].y2,car_def:cw_carScores[0].car_def});
   cw_topScores.sort(function(a,b) {if(a.v > b.v) {return -1} else {return 1}});
-
   plot_graphs();
 
   var parentCar = cw_topScores[0].car_def
@@ -416,6 +424,7 @@ function cw_nextGeneration() {
   document.getElementById("generation").innerHTML = "generation "+gen_counter;
   document.getElementById("cars").innerHTML = "";
   document.getElementById("population").innerHTML = "cars alive: "+generationSize;
+  document.getElementById("alpha").innerHTML = "alpha: " + alpha.toFixed(2);
 }
 
 function cw_getChampions() {
@@ -483,6 +492,22 @@ function cw_makeChild(old, targetGeneIndex, offset) {
       geneIndex++;
   }
 
+  newCarDef.vertex_list = new Array();
+  for (var i = 0; i < 8; i++) {
+      var x = old.vertex_list[i].x;
+      var y = old.vertex_list[i].y;
+
+      if (geneIndex == targetGeneIndex) {
+          var length = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+          var newLength = cw_mutate1(length, offset, chassisMinAxis, chassisMaxAxis);
+          newCarDef.vertex_list[i] = cw_createVertex(i, newLength);
+      } else {
+          newCarDef.vertex_list[i] = old.vertex_list[i];
+      }
+
+      geneIndex++;
+  }
+
   // Chassis density
   if (geneIndex == targetGeneIndex) {
       newCarDef.chassis_density = cw_mutate1(old.chassis_density, offset, chassisMinDensity, chassisMaxDensity);
@@ -490,30 +515,6 @@ function cw_makeChild(old, targetGeneIndex, offset) {
       newCarDef.chassis_density = old.chassis_density;
   }
 
-  newCarDef.vertex_list = new Array();
-  limits = [[ 1,  0],
-            [ 1,  1],
-            [ 0,  1],
-            [-1,  1],
-            [-1,  0],
-            [-1, -1],
-            [ 0, -1],
-            [ 1, -1]]
-  for (var i = 0; i < 8; i++) {
-      var newCoords = [old.vertex_list[i].x, old.vertex_list[i].y];
-
-      for (var j = 0; j < 2; j++) {
-          if (geneIndex == targetGeneIndex) {
-              newCoords[j] = cw_mutate1(newCoords[j],
-                      offset,
-                      chassisMinAxis,
-                      limits[i][j] * chassisMaxAxis);
-          }
-          geneIndex++;
-      }
-
-      newCarDef.vertex_list[i] = new b2Vec2(newCoords[0], newCoords[1]);
-  }
 
   return newCarDef;
 }
@@ -522,8 +523,10 @@ function cw_mutate1(old, offset, min, max) {
     var range = max - min;
     var newValue = old + offset * range;
 
-    if (newValue < min || newValue > max) {
-        return old;
+    if (newValue < min) {
+        return min
+    } else if (newValue > max) {
+        return max
     } else {
         return newValue;
     }
@@ -895,6 +898,7 @@ function cw_resetPopulation() {
   document.getElementById("generation").innerHTML = "";
   document.getElementById("cars").innerHTML = "";
   document.getElementById("topscores").innerHTML = "";
+  document.getElementById("topscores").innerHTML = "";
   cw_clearGraphics();
   cw_carArray = new Array();
   cw_carGeneration = new Array();
@@ -903,6 +907,7 @@ function cw_resetPopulation() {
   cw_graphTop = new Array();
   cw_graphElite = new Array();
   cw_graphAverage = new Array();
+  alpha = 0.05;
   lastmax = 0;
   lastaverage = 0;
   lasteliteaverage = 0;
