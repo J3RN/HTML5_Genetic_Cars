@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>HTML5 Genetic Algorithm 2D Car Thingy - Chrome recommended</title>
+    <title>Gradient Descent Cars</title>
     <style>
       #mainbox {
         width: 800px;
@@ -206,8 +206,12 @@
       <div id="cars"></div>
     </div>
     <div id="explanation">
+      <h2>Attribution</h2>
+      This project is a fork of the <a href="http://rednuht.org/genetic_cars_2">HTML5 Genetic Cars</a> project
+      (<a href="https://github.com/red42/HTML5_Genetic_Cars">GitHub repository</a>). The original idea is his, and I accept no credit for
+      it.
       <h3>GitHub</h3>
-      The code is now on a <a href="https://github.com/red42/HTML5_Genetic_Cars">GitHub repository</a>. Feel free to contribute!
+      The code is available in this <a href="https://github.com/J3RN/HTML5_Genetic_Cars">GitHub repository</a>. Feel free to contribute!
       <h3>Controls</h3>
       Save Population: Saves current population locally.<br />
       Restore Saved Population: Restore a previously saved population.<br />
@@ -223,7 +227,9 @@
       Green: Average of the top 10 cars in each generation.<br />
       Blue: Average of the entire generation.
       <h3>But what is it?</h3>
-      The program uses a simple genetic algorithm to evolve random two-wheeled shapes into cars over generations. Loosely based on <a href="http://boxcar2d.com/">BoxCar2D</a>, but
+      This program applies gradient descent to simple eight-vertex, 2-wheel car designs. Each generation is based on the best of the previous generation.
+
+      Loosely based on <a href="http://boxcar2d.com/">BoxCar2D</a>, but
       written from scratch, only using the same physics engine (<a href="http://box2d.org/">box2d</a>).<br />
       seedrandom.js written by <a href="http://davidbau.com/">David Bau</a>. (thanks!)
       <h3>Genome</h3>
@@ -236,8 +242,7 @@
       <h3>Blurb</h3>
       This is not as deterministic as it should be, so your best car may not perform as well as it once did. The terrain gets more complex with distance.<br />
       I'm not in the mood to deal with checking if all scripts have loaded before running, so refresh the page if things seem whack.<br />
-      Written by <a href="http://rednuht.org">this guy</a>.<br />
-      <a href="mailto:rednuht@rednuht.org">Send me food</a>.
+      Originally written by <a href="http://rednuht.org">this guy</a>, the gradient descent version written by <a href="http://j3rn.com">this guy</a>.<br />
     </div>
     <div name="minimapmarker" class="minimapmarker"></div>
     <div name="healthbar" class="healthbar" onclick="cw_setCameraTarget(this.car_index)">
