@@ -202,7 +202,14 @@ cw_Car.prototype.kill = function() {
     var position = this.maxPosition;
     var score = position + avgspeed;
     ghost_compare_to_replay(this.replay, ghost, score);
-    cw_carScores.push({ car_def:this.car_def, v:score, s: avgspeed, x:position, y:this.maxPositiony, y2:this.minPositiony });
+    cw_carScores.push({
+	car_def: this.car_def,
+	v: score,
+	s: avgspeed,
+	x: position,
+	y: this.maxPositiony,
+	y2: this.minPositiony
+    });
     world.DestroyBody(this.chassis);
 
     for (var i = 0; i < this.wheels.length; i++){
@@ -394,7 +401,14 @@ function cw_nextGeneration() {
     }
 
     // Add car and sort
-    cw_topScores.push({i:gen_counter,v:cw_carScores[0].v,x:cw_carScores[0].x,y:cw_carScores[0].y,y2:cw_carScores[0].y2,car_def:cw_carScores[0].car_def});
+    cw_topScores.push({
+	i: gen_counter,
+	v: cw_carScores[0].v,
+	x: cw_carScores[0].x,
+	y: cw_carScores[0].y,
+	y2: cw_carScores[0].y2,
+	car_def: cw_carScores[0].car_def
+    });
     cw_topScores.sort(function(a,b) {if(a.v > b.v) {return -1} else {return 1}});
     plot_graphs();
 
