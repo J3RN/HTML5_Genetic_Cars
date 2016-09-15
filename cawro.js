@@ -34,7 +34,7 @@ var fogdistance = document.getElementById("minimapfog").style;
 var nAttributes = 15;
 var generationSize = nAttributes * 2 + 1;
 var cw_carArray = new Array(generationSize);
-var cw_carGeneration = new Array();
+var cw_carGeneration = new Array(generationSize);
 var cw_carScores = new Array();
 var cw_topScores = new Array();
 var cw_graphTop = new Array();
@@ -366,7 +366,7 @@ function cw_generationZero() {
     for(var k = 0; k < generationSize; k++) {
 	var car_def = cw_createRandomCar();
 	car_def.index = k;
-	cw_carGeneration.push(car_def);
+	cw_carGeneration[k] = car_def;
     }
     gen_counter = 0;
     cw_deadCars = 0;
@@ -387,8 +387,6 @@ function cw_materializeGeneration() {
 }
 
 function cw_nextGeneration() {
-    var newGeneration = new Array();
-    var newborn;
     cw_getChampions();
 
     // Increase alpha if no improvement
@@ -415,19 +413,18 @@ function cw_nextGeneration() {
     var offsets = [ -alpha, alpha ];
     for(k = 0; k < nAttributes; k++) {
 	for (i = 0; i < 2; i ++) {
-            newborn = cw_makeChild(parentCar, k, offsets[i]);
+            var newborn = cw_makeChild(parentCar, k, offsets[i]);
             newborn.is_elite = false;
             newborn.index = k * 2 + i;
-            newGeneration.push(newborn);
+            cw_carGeneration[newborn.index] = newborn;
 	}
     }
 
     parentCar.is_elite = true;
-    parentCar.index = nAttributes * 2;
-    newGeneration.push(parentCar)
+    parentCar.index = generationSize - 1;
+    cw_carGeneration[parentCar.index] = parentCar;
 
     cw_carScores = new Array();
-    cw_carGeneration = newGeneration;
     gen_counter++;
     cw_materializeGeneration();
     cw_deadCars = 0;
@@ -897,7 +894,7 @@ function cw_resetPopulation() {
     document.getElementById("topscores").innerHTML = "";
     cw_clearGraphics();
     cw_carArray = new Array(generationSize);
-    cw_carGeneration = new Array();
+    cw_carGeneration = new Array(generationSize);
     cw_carScores = new Array();
     cw_topScores = new Array();
     cw_graphTop = new Array();
