@@ -891,23 +891,6 @@ function cw_stopSimulation() {
     clearInterval(cw_drawInterval);
 }
 
-function cw_kill() {
-    var avgspeed = (myCar.maxPosition / myCar.frames) * box2dfps;
-    var position = myCar.maxPosition;
-    var score = position + avgspeed;
-    document.getElementById("cars").innerHTML += Math.round(position*100)/100 + "m + " +" "+Math.round(avgspeed*100)/100+" m/s = "+ Math.round(score*100)/100 +"pts<br />";
-    ghost_compare_to_replay(replay, ghost, score);
-    cw_carScores.push({ i:current_car_index, v:score, s: avgspeed, x:position, y:myCar.maxPositiony, y2:myCar.minPositiony });
-    current_car_index++;
-    cw_killCar();
-    if(current_car_index >= generationSize) {
-	cw_nextGeneration();
-	current_car_index = 0;
-    }
-    myCar = cw_createNextCar();
-    last_drawn_tile = 0;
-}
-
 function cw_resetPopulation() {
     document.getElementById("generation").innerHTML = "";
     document.getElementById("cars").innerHTML = "";
