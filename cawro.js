@@ -33,7 +33,7 @@ var fogdistance = document.getElementById("minimapfog").style;
 
 var nAttributes = 15;
 var generationSize = nAttributes * 2 + 1;
-var cw_carArray = new Array();
+var cw_carArray = new Array(generationSize);
 var cw_carGeneration = new Array();
 var cw_carScores = new Array();
 var cw_topScores = new Array();
@@ -381,9 +381,8 @@ function cw_generationZero() {
 }
 
 function cw_materializeGeneration() {
-    cw_carArray = new Array();
-    for(var k = 0; k < generationSize; k++) {
-	cw_carArray.push(new cw_Car(cw_carGeneration[k]));
+    for (var k = 0; k < generationSize; k++) {
+	cw_carArray[k] = new cw_Car(cw_carGeneration[k]);
     }
 }
 
@@ -897,7 +896,7 @@ function cw_resetPopulation() {
     document.getElementById("topscores").innerHTML = "";
     document.getElementById("topscores").innerHTML = "";
     cw_clearGraphics();
-    cw_carArray = new Array();
+    cw_carArray = new Array(generationSize);
     cw_carGeneration = new Array();
     cw_carScores = new Array();
     cw_topScores = new Array();
