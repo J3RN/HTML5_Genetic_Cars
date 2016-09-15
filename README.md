@@ -1,7 +1,7 @@
-Gradient Descent Cars
+Hill Climbing Cars
 =====================
 
-A gradient descent car evolver in HTML5 canvas.
+A [hill climbing](https://en.wikipedia.org/wiki/Hill_climbing) car evolver in HTML5 canvas.
 
 The original implementation was inspired by BoxCar2D, and uses the same physics engine, Box2D, but was written from scratch. This implementation is largely based on the original, and contains a large amount of the original code.
 
