@@ -393,16 +393,19 @@ function cw_materializeGeneration() {
     }
 }
 
-function cw_nextGeneration() {
-    cw_getChampions();
-
-    // Increase alpha if no improvement
+function cw_updateAlpha() {
+   // Increase alpha if no improvement
     if (cw_topScores[0] !== undefined && cw_carScores[0].v <= cw_topScores[0].v && alpha < 1.0) {
 	alpha += 0.05;
     } else {
 	alpha = 0.05;
 	winners.push(cw_carScores[0].car_def);
     }
+}
+
+function cw_nextGeneration() {
+    cw_getChampions();
+    cw_updateAlpha();
 
     // Add car and sort
     cw_topScores.push({
