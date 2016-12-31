@@ -117,6 +117,13 @@ function showDistance(distance, height) {
 }
 
 /* ========================================================================= */
+/* === Utility ============================================================= */
+
+function descCarSort(a, b) {
+    return b.v - a.v;
+}
+
+/* ========================================================================= */
 /* === Car ================================================================= */
 var cw_Car = function() {
     this.__constructor.apply(this, arguments);
@@ -406,7 +413,7 @@ function cw_nextGeneration() {
 	y2: cw_carScores[0].y2,
 	car_def: cw_carScores[0].car_def
     });
-    cw_topScores.sort(function(a,b) {if(a.v > b.v) {return -1} else {return 1}});
+    cw_topScores.sort(descCarSort);
     plot_graphs();
 
     var parentCar = cw_topScores[0].car_def
@@ -439,7 +446,7 @@ function cw_nextGeneration() {
 
 function cw_getChampions() {
     var ret = new Array();
-    cw_carScores.sort(function(a,b) {if(a.v > b.v) {return -1} else {return 1}});
+    cw_carScores.sort(descCarSort);
     for(var k = 0; k < generationSize; k++) {
 	ret.push(cw_carScores[k].i);
     }
